@@ -281,8 +281,8 @@ app.get('/comments', async (req, res) => {
 })
 
 //add contact details
-app.post('/contact', tokenAuthentication, async (req, res) => {
-  const { name, contact } = req.details
+app.post('/contact', async (req, res) => {
+  const { name, contact } = req.body
   try {
     //creating new contact
     const newContact = new Contact({
