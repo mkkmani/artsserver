@@ -1,0 +1,52 @@
+### admin post
+POST http://localhost:3009/admin/signup
+Content-Type: application/json
+
+{
+    "name":"Vijay Kumar",
+    "email":"vijaykumarkosireddy@gmail.com",
+    "mobile":"6301312993",
+    "password":"Vijay@6301312993_admin"
+}
+
+### admin login
+POST http://localhost:3009/admin/login
+Content-Type: application/json
+
+{
+    "username":"6301312993",
+    "password":"Vijay@6301312993_admin"
+}
+
+### post comment
+POST http://localhost:3009/comment
+Content-Type: application/json
+
+{
+    "comment":"2 testing comment from test server"
+}
+
+### post contact
+POST http://localhost:3009/contact
+Content-Type: application/json
+
+{
+    "name":"test name",
+    "contact":"testcontact@email.com"
+}
+
+### post image
+POST http://localhost:3009/gallery
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YTE5MTllNTRiZTI5OWU3Zjc1NDE2MCIsInVzZXJuYW1lIjoiNjMwMTMxMjk5MyIsImlhdCI6MTcwNTExNjE0MCwiZXhwIjoxNzA1MTE5NzQwfQ.ntUetd7wu-40jrc1uDDZ9dOGjueogJbhhp-FrsA5W6E
+
+{
+    "name":"test image",
+    "imageUrl":"test image url"
+}
+
+### get images
+GET http://localhost:3009/gallery
+
+### get comments
+GET http://localhost:3009/comments
