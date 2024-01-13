@@ -50,3 +50,11 @@ GET http://localhost:3009/gallery
 
 ### get comments
 GET http://localhost:3009/comments
+
+### updating the password
+POST http://localhost:3009/reset-password
+Content-Type: application/json
+
+{
+    "email":"manitech0100@gmail.com"
+}

@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const nodemailer = require('nodemailer')
 
 const app = express()
 app.use(express.json())
@@ -307,6 +308,84 @@ app.get('/contact', async (req, res) => {
     res.status(200).json({ contacts: allComments })
   } catch (error) {
     res.status(500).json({ error: 'internal server error' })
+  }
+})
+
+//admin password resetting
+let generatedOtp = ''
+let userMail = ''
+
+app.post('/reset-password', async (req, res) => {
+  try {
+    const { email } = req.body
+    const mail = process.env.MAIL
+    const password = process.env.MAIL_PASS
+
+    // Checking if the admin with the provided email exists
+    const existingAdmin = await Admin.findOne({ email })
+
+    if (!existingAdmin) {
+      return res.status(404).json({ error: 'Details not found.' })
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: mail,
+        pass: password,
+      },
+    })
+
+    // Generating a new OTP
+    generatedOtp = Math.floor(10000000 + Math.random() * 90000000)
+    userMail = email
+
+    const mailOptions = {
+      from: mail,
+      to: email,
+      subject: 'Reset your password',
+      text: `OTP for resetting your password is ${generatedOtp}\n\n OTP is valid for 10 minutes`,
+    }
+
+    // Sending the email with OTP
+    const send = await transporter.sendMail(mailOptions)
+
+    // Setting a timeout to reset the OTP after 10 minutes
+    setTimeout(() => {
+      generatedOtp = ''
+      userMail = ''
+    }, 10 * 60 * 1000)
+
+    res.status(201).json({
+      message:
+        'OTP sent to your email address. Check your spam folder as well.',
+    })
+  } catch (error) {
+    console.error('Error sending OTP:', error.message)
+    res.status(500).json({ error: 'Internal server error.' })
+  }
+})
+
+//otp verification
+app.post('/otp-verification', async (req, res) => {
+  const { otp, password } = req.body
+  try {
+    if (otp === generatedOtp) {
+      // otp matched
+      const admin = await Admin.findOne({ email: userMail })
+      //hashing the password
+      const hashedPass = await bcrypt.hash(password, 10)
+      //updating and saving the password
+      admin.password = hashedPass
+      await admin.save()
+      generatedOtp = ''
+      userMail = ''
+      res.status(201).json({ message: 'Password updated successfully' })
+    } else {
+      res.status(401).json({ message: 'Invalid otp' })
+    }
+  } catch (e) {
+    res.status(500).json({ message: 'internal server error' })
   }
 })
 
