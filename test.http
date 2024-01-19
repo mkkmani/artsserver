@@ -52,9 +52,18 @@ GET http://localhost:3009/gallery
 GET http://localhost:3009/comments
 
 ### updating the password
-POST http://localhost:3009/reset-password
+POST http://localhost:3009/generate-otp
 Content-Type: application/json
 
 {
-    "email":"manitech0100@gmail.com"
+    "userMail":"manitech0100@gmail.com"
+}
+
+### otp verification
+POST http://localhost:3009/otp-verification
+Content-Type: application/json
+
+{
+    "otp":"911093",
+    "password":"Mani@admin_"
 }

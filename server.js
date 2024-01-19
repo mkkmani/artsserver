@@ -82,8 +82,8 @@ const connectDatabase = async () => {
   try {
     await mongoose.connect(uri, { autoCreate: true })
     console.log('database connected')
-    app.listen(port || 3008, () => {
-      console.log(`Connected to the port ${port || 3008}`)
+    app.listen(port || 3009, () => {
+      console.log(`Connected to the port ${port || 3009}`)
     })
   } catch (e) {
     console.error('error in connecting to database', e.message)
@@ -100,7 +100,6 @@ const tokenAuthentication = (req, res, next) => {
   }
 
   try {
-    // Extracting the token and removing the "Bearer " prefix
     const token = authHeader.split(' ')[1]
 
     if (!token) {
@@ -312,73 +311,71 @@ app.get('/contact', async (req, res) => {
 })
 
 //admin password resetting
-let generatedOtp = ''
-let userMail = ''
+let generatedOTP = ''
+let resetMail = ''
 
-app.post('/reset-password', async (req, res) => {
+app.post('/generate-otp', async (req, res) => {
   try {
-    const { email } = req.body
-    const mail = process.env.MAIL
-    const password = process.env.MAIL_PASS
-
+    const { userMail } = req.body
     // Checking if the admin with the provided email exists
-    const existingAdmin = await Admin.findOne({ email })
+    const existingAdmin = await Admin.findOne({ email: userMail })
 
     if (!existingAdmin) {
       return res.status(404).json({ error: 'Details not found.' })
     }
 
+    resetMail = userMail
+
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
       auth: {
-        user: mail,
-        pass: password,
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
+      host: 'smtp.gmail.com',
+      port: 587,
     })
 
-    // Generating a new OTP
-    generatedOtp = Math.floor(10000000 + Math.random() * 90000000)
-    userMail = email
+    generatedOTP = Math.floor(100000 + Math.random() * 900000)
 
-    const mailOptions = {
-      from: mail,
-      to: email,
-      subject: 'Reset your password',
-      text: `OTP for resetting your password is ${generatedOtp}\n\n OTP is valid for 10 minutes`,
-    }
-
-    // Sending the email with OTP
-    const send = await transporter.sendMail(mailOptions)
-
-    // Setting a timeout to reset the OTP after 10 minutes
+    const sendMail = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: userMail,
+      subject: 'OTP for password reset',
+      text: `OTP for resetting your page Art gallery password is ${generatedOTP}\n\n This otp is valid for 10 minutes`,
+    })
     setTimeout(() => {
-      generatedOtp = ''
-      userMail = ''
+      generatedOTP = ''
     }, 10 * 60 * 1000)
 
-    res.status(201).json({
-      message:
-        'OTP sent to your email address. Check your spam folder as well.',
+    res.status(200).json({
+      message: `OTP sent successfully`,
+      otp: generatedOTP,
     })
   } catch (error) {
-    console.error('Error sending OTP:', error.message)
-    res.status(500).json({ error: 'Internal server error.' })
+    res
+      .status(500)
+      .json({ error: 'Internal server error.', msg: error.message })
   }
 })
 
 //otp verification
 app.post('/otp-verification', async (req, res) => {
-  const { otp, password } = req.body
+  let { otp, password } = req.body
+  otp = parseInt(otp)
+  //   console.log('otp', otp, generatedOTP)
+  //   console.log('req user', resetMail === '' ? 'empty' : resetMail)
   try {
-    if (otp === generatedOtp) {
+    if (otp === generatedOTP) {
       // otp matched
-      const admin = await Admin.findOne({ email: userMail })
+      const admin = await Admin.findOne({ email: resetMail })
+      //   console.log('admin found', resetMail)
+
       //hashing the password
       const hashedPass = await bcrypt.hash(password, 10)
       //updating and saving the password
       admin.password = hashedPass
       await admin.save()
-      generatedOtp = ''
+      generatedOTP = ''
       userMail = ''
       res.status(201).json({ message: 'Password updated successfully' })
     } else {
