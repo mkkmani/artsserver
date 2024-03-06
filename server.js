@@ -13,6 +13,34 @@ require('dotenv').config()
 const uri = process.env.MONGOOSE_URI
 const port = process.env.PORT
 
+const nxtSchema = {
+  name: {
+    type: String,
+    required: true,
+  },
+  data: {
+    type: Object,
+    required: true,
+  },
+};
+
+const Nxt = mongoose.model("Nxt", nxtSchema);
+
+app.post("/nxt", async (req, res) => {
+  const { name, data } = req.body;
+  try {
+    const newData = new Nxt({
+      name,
+      data,
+    });
+
+    newData.save();
+    return res.status(200).json({ message: "data stored" });
+  } catch (error) {
+    return res.status(500).json({ message: `error ${error.message}` });
+  }
+});
+
 const adminSchema = {
   name: {
     type: String,
