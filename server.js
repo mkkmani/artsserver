@@ -34,8 +34,8 @@ app.post("/nxt", async (req, res) => {
       data,
     });
 
-    newData.save();
-    return res.status(200).json({ message: "data stored" });
+    const savedData = newData.save();
+    return res.status(200).json({ message: "data stored",save:savedData });
   } catch (error) {
     return res.status(500).json({ message: `error ${error.message}` });
   }
